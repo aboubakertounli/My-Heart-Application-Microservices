@@ -1,0 +1,53 @@
+version: '3.8'
+
+services:
+  patient-service:
+    build: ./services/patient-service
+    ports:
+      - "3001:3001"
+    networks:
+      - myheart-network
+
+  appointment-service:
+    build: ./services/appointment-service
+    ports:
+      - "3002:3002"
+    depends_on:
+      - patient-service
+      - billing-service
+    networks:
+      - myheart-network
+
+  billing-service:
+    build: ./services/billing-service
+    ports:
+      - "3003:3003"
+    networks:
+      - myheart-network
+
+  lab-service:
+    build: ./services/lab-service
+    ports:
+      - "3004:3004"
+    networks:
+      - myheart-network
+
+  prescription-service:
+    build: ./services/prescription-service
+    ports:
+      - "3005:3005"
+    networks:
+      - myheart-network
+
+  frontend:
+    image: nginx:alpine
+    ports:
+      - "80:80"
+    volumes:
+      - ./frontend:/usr/share/nginx/html
+    networks:
+      - myheart-network
+
+networks:
+  myheart-network:
+    driver: bridge
