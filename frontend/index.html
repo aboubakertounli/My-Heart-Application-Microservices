@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MyHeart - Gestion des Soins</title>
+    <style>
+        body { font-family: 'Segoe UI', sans-serif; margin: 0; background: #f4f7f6; }
+        header { background: #e74c3c; color: white; padding: 1rem; text-align: center; }
+        .container { max-width: 1000px; margin: 2rem auto; padding: 1rem; }
+        .card { background: white; padding: 1.5rem; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); margin-bottom: 1rem; }
+        h2 { color: #2c3e50; border-bottom: 2px solid #e74c3c; padding-bottom: 0.5rem; }
+        .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1rem; }
+        .btn { background: #e74c3c; color: white; border: none; padding: 0.5rem 1rem; border-radius: 4px; cursor: pointer; }
+        .btn:hover { background: #c0392b; }
+        table { width: 100%; border-collapse: collapse; margin-top: 1rem; }
+        th, td { text-align: left; padding: 0.75rem; border-bottom: 1px solid #ddd; }
+        th { background: #f8f9fa; }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>MyHeart – Système de gestion des soins de santé</h1>
+    </header>
+    <div class="container">
+        <div class="grid">
+            <div class="card">
+                <h2>Patients</h2>
+                <button class="btn" onclick="fetchPatients()">Charger Patients</button>
+                <div id="patientList"></div>
+            </div>
+            <div class="card">
+                <h2>Prendre Rendez-vous</h2>
+                <form id="appointmentForm">
+                    <input type="number" id="pId" placeholder="ID Patient" required><br><br>
+                    <input type="text" id="doctor" placeholder="Médecin" required><br><br>
+                    <input type="date" id="date" required><br><br>
+                    <button type="submit" class="btn">Réserver</button>
+                </form>
+            </div>
+        </div>
+        <div class="card">
+            <h2>Derniers Rendez-vous</h2>
+            <div id="appointmentList"></div>
+        </div>
+    </div>
+
+    <script>
+        async function fetchPatients() {
+            const res = await fetch('http://localhost:3001/patients');
+            const data = await res.json();
+            let html = '<table><tr><th>ID</th><th>Nom</th><th>Email</th></tr>';
+            data.forEach(p => {
+                html += `<tr><td>${p.id}</td><td>${p.name}</td><td>${p.email}</td></tr>`;
+            });
+            html += '</table>';
+            document.getElementById('patientList').innerHTML = html;
+        }
+
+        document.getElementById('appointmentForm').onsubmit = async (e) => {
+            e.preventDefault();
+            const patientId = document.getElementById('pId').value;
+            const doctor = document.getElementById('doctor').value;
+            const date = document.getElementById('date').value;
+
+            const res = await fetch('http://localhost:3002/appointments', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ patientId, doctor, date })
+            });
+
+            if (res.ok) {
+                alert('Rendez-vous créé !');
+                fetchAppointments();
+            } else {
+                alert('Erreur: Patient non trouvé ou service indisponible');
+            }
+        };
+
+        async function fetchAppointments() {
+            const res = await fetch('http://localhost:3002/appointments');
+            const data = await res.json();
+            let html = '<table><tr><th>ID</th><th>Patient</th><th>Médecin</th><th>Date</th><th>Statut</th></tr>';
+            data.forEach(a => {
+                html += `<tr><td>${a.id}</td><td>${a.patientId}</td><td>${a.doctor}</td><td>${a.date}</td><td>${a.status}</td></tr>`;
+            });
+            html += '</table>';
+            document.getElementById('appointmentList').innerHTML = html;
+        }
+
+        fetchAppointments();
+    </script>
+</body>
+</html>
